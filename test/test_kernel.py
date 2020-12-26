@@ -141,6 +141,18 @@ class TestKernel( unittest.TestCase ):
     def test18_whitespace( self ):
         self._testTag('whitespace preservation', 'test whitespace', ["Extra   Spaces\n   Rule!   (but not in here!)    But   Here   They   Do!"])
 
+    def test19_caret( self ):
+        self._testTag('caret test #1', 'You should test caret begin', ['Begin caret matched: You should']) 
+        self._testTag('caret test #2', 'test caret creamy goodness middle', ['Middle caret matched: creamy goodness'])
+        self._testTag('caret test #3', 'test caret end the credits roll', ['End caret matched: the credits roll'])
+        self._testTag('caret test #4', 'test caret having multiple carets in a pattern makes me extremely happy',
+                 ['Multiple carets matched: having, carets in a pattern, extremely happy'])
+        self._testTag('caret test #5', 'test caret begin', ['Begin caret matched:']) 
+        self._testTag('caret test #6', 'test caret middle', ['Middle caret matched:'])
+        self._testTag('caret test #7', 'test caret end', ['End caret matched:'])
+        self._testTag('caret test #8', 'test caret multiple makes me extremely happy',
+                 ['Multiple carets matched: , , extremely happy'])
+
         # Run an interactive interpreter
         #print( "\nEntering interactive mode (ctrl-c to exit)" )
         #while True: print( self.k.respond(raw_input("> ")) )

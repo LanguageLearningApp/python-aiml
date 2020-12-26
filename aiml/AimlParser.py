@@ -455,6 +455,7 @@ class AimlHandler(ContentHandler):
         "topicstar":    ( [], ["index"], False ),
         "uppercase":    ( [], [], True ),
         "version":      ( [], [], False ),
+        "caret":         ( [], ["index"], False ),
     }
 
     def _validateElemStart(self, name, attr, version):
