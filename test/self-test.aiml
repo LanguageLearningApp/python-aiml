@@ -172,6 +172,27 @@ Nothing <random></random>here!
 <template>Multiple stars matched: <star index="1"/>, <star index="2"/>, <star index="3"/></template>
 </category>
 
+<!-- caret -->
+<category>
+<pattern>^ TEST CARET BEGIN EMPTY</pattern>
+<template>Begin caret matched</template>
+</category>
+<category>
+<pattern>^ TEST CARET BEGIN</pattern>
+<template>Begin caret matched: <caret/></template>
+</category>
+<category>
+<pattern>TEST CARET ^ MIDDLE</pattern>
+<template>Middle caret matched: <caret/></template>
+</category>
+<category>
+<pattern>TEST CARET END ^</pattern>
+<template>End caret matched: <caret/></template>
+</category>
+<category>
+<pattern>TEST CARET ^ MULTIPLE ^ MAKES ME ^</pattern>
+<template>Multiple carets matched: <caret index="1"/>, <caret index="2"/>, <caret index="3"/></template>
+</category>
 
 
 <!-- system -->

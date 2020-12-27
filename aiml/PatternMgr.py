@@ -16,12 +16,13 @@ from .constants import *
 
 class PatternMgr:
     # special dictionary keys
-    _UNDERSCORE = 0
-    _STAR       = 1
-    _TEMPLATE   = 2
-    _THAT       = 3
-    _TOPIC      = 4
-    _BOT_NAME   = 5
+    _UNDERSCORE = '0'
+    _STAR       = '1'
+    _TEMPLATE   = '2'
+    _THAT       = '3'
+    _TOPIC      = '4'
+    _BOT_NAME   = '5'
+    _CARET      = '6'
     
     def __init__(self):
         self._root = {}
@@ -89,6 +90,8 @@ class PatternMgr:
                 key = self._UNDERSCORE
             elif key == u"*":
                 key = self._STAR
+            elif key == u"^":
+                key = self._CARET
             elif key == u"BOT_NAME":
                 key = self._BOT_NAME
             if key not in node:
@@ -249,6 +252,92 @@ class PatternMgr:
             elif starType == 'topicstar': return ' '.join(topic.split()[start:end+1])
         else: return u""
 
+    def caret(self, caretType, pattern, that, topic, index):
+        """Returns a string, the portion of pattern that was matched by a ^.
+
+        The 'caretType' parameter specifies which type of caret to find.
+        Legal values are:
+         - 'caret': matches a caret in the main pattern.
+        """
+        # Mutilate the input.  Remove all punctuation and convert the
+        # text to all caps.
+        input_ = pattern.upper()
+        input_ = re.sub(self._puncStripRE, " ", input_)
+        input_ = re.sub(self._whitespaceRE, " ", input_)
+        if that.strip() == u"": that = u"ULTRABOGUSDUMMYTHAT" # 'that' must never be empty
+        thatInput = that.upper()
+        thatInput = re.sub(self._puncStripRE, " ", thatInput)
+        thatInput = re.sub(self._whitespaceRE, " ", thatInput)
+        if topic.strip() == u"": topic = u"ULTRABOGUSDUMMYTOPIC" # 'topic' must never be empty
+        topicInput = topic.upper()
+        topicInput = re.sub(self._puncStripRE, " ", topicInput)
+        topicInput = re.sub(self._whitespaceRE, " ", topicInput)
+
+        # Pass the input off to the recursive pattern-matcher
+        patMatch, template = self._match(input_.split(), thatInput.split(), topicInput.split(), self._root)
+        if template == None:
+            return ""
+
+        # Extract the appropriate portion of the pattern, based on the
+        # caretType argument.
+        words = None
+        if caretType == 'caret':
+            patMatch = patMatch[:patMatch.index(self._THAT)]
+            words = input_.split()
+        else:
+            # unknown value
+            raise ValueError( "caretType must be in ['caret']" )
+
+        # compare the input string to the matched pattern, word by word.
+        # At the end of this loop, if foundTheRightCaret is true, start and
+        # end will contain the start and end indices (in "words") of
+        # the substring that the desired caret matched.
+        foundTheRightCaret = False
+        start = end = j = numCarets = k = 0
+        for i in range(len(words)):
+            # This condition is true after processing a caret
+            # that ISN'T the one we're looking for.
+            if i < k:
+                continue
+            # If we're reached the end of the pattern, we're done.
+            if j == len(patMatch):
+                break
+            if not foundTheRightCaret:
+                if patMatch[j] in [self._CARET]: #we got a caret
+                    numCarets += 1
+                    if numCarets == index:
+                        # This is the caret we care about.
+                        foundTheRightCaret = True
+                    start = i
+                    # Iterate through the rest of the string.
+                    for k in range (i, len(words)):
+                        # If the caret is at the end of the pattern,
+                        # we know exactly where it ends.
+                        if j+1  == len (patMatch):
+                            end = len (words)
+                            break
+                        # If the words have started matching the
+                        # pattern again, the caret has ended.
+                        if patMatch[j+1] == words[k]:
+                            _i = i
+                            end = k - 1
+                            i = k
+                            if _i == i:
+                                j += 1
+                            break
+                # If we just finished processing the caret we cared
+                # about, we exit the loop early.
+                if foundTheRightCaret:
+                    break
+            # Move to the next element of the pattern.
+            j += 1
+            
+        # extract the caret words from the original, unmutilated input.
+        if foundTheRightCaret:
+            #print( ' '.join(pattern.split()[start:end+1]) )
+            if caretType == 'caret': return ' '.join(pattern.split()[start:end+1])
+        else: return u""
+
     def _match(self, words, thatWords, topicWords, root):
         """Return a tuple (pat, tem) where pat is a list of nodes, starting
         at the root and leading to the matching pattern, and tem is the
@@ -261,7 +350,14 @@ class PatternMgr:
             # we're out of words.
             pattern = []
             template = None
-            if len(thatWords) > 0:
+
+            # Required to make cases when caret is at the end WORK
+            if self._CARET in root:
+                pattern, template = self._match(words, thatWords, topicWords, root[self._CARET])
+                if template is not None:
+                    newPattern = [self._CARET] + pattern
+                    return (newPattern, template)
+            elif len(thatWords) > 0:
                 # If thatWords isn't empty, recursively
                 # pattern-match on the _THAT node with thatWords as words.
                 try:
@@ -317,6 +413,18 @@ class PatternMgr:
             if template is not None:
                 newPattern = [first] + pattern
                 return (newPattern, template)
+        
+        # check caret
+        if self._CARET in root:
+            # Must include the case where suf is [] in order to handle the case
+            # where a ^ is at the end of the pattern.
+            _suffix = words
+            for j in range(len(_suffix)+1):
+                suf = _suffix[j:]
+                pattern, template = self._match(suf, thatWords, topicWords, root[self._CARET])
+                if template is not None:
+                    newPattern = [self._CARET] + pattern
+                    return (newPattern, template)
         
         # check star
         if self._STAR in root:

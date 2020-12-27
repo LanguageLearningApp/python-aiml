@@ -109,6 +109,7 @@ class Kernel:
             "topicstar":    self._processTopicstar,
             "uppercase":    self._processUppercase,
             "version":      self._processVersion,
+            "caret":        self._processCaret,
         }
 
     def bootstrap(self, brainFile=None, learnFiles=[], commands=[],
@@ -1124,3 +1125,31 @@ class Kernel:
 
         """
         return self.version()
+
+    # <star>
+    def _processCaret(self, elem, sessionID):
+        """Process a <caret> AIML element.
+
+        Optional attribute elements:
+            index: Which "^" character in the current pattern should
+            be matched?
+
+        <caret> elements return the text fragment matched by the "^"
+        character in the current input pattern.  For example, if the
+        input "Hello Tom Smith, how are you?" matched the pattern
+        "HELLO ^ HOW ARE YOU", then a <caret> element in the template
+        would evaluate to "Tom Smith".
+
+        """
+        try: index = int(elem[1]['index'])
+        except KeyError: index = 1
+        # fetch the user's last input
+        inputStack = self.getPredicate(self._inputStack, sessionID)
+        input_ = self._subbers['normal'].sub(inputStack[-1])
+        # fetch the Kernel's last response (for 'that' context)
+        outputHistory = self.getPredicate(self._outputHistory, sessionID)
+        try: that = self._subbers['normal'].sub(outputHistory[-1])
+        except: that = ""  # there might not be any output yet
+        topic = self.getPredicate("topic", sessionID)
+        response = self._brain.caret("caret", input_, that, topic, index)
+        return response
