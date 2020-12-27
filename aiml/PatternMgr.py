@@ -6,6 +6,8 @@ http://www.alicebot.org/documentation/matching.html
 
 from __future__ import print_function
 
+from collections import namedtuple
+
 import marshal
 import pprint
 import re
@@ -13,6 +15,8 @@ import string
 import sys
 
 from .constants import *
+
+MatchResult = namedtuple('MatchResult', 'pattern template')
 
 class PatternMgr:
     # special dictionary keys
@@ -157,7 +161,9 @@ class PatternMgr:
         
         # Pass the input off to the recursive call
         patMatch, template = self._match(input_.split(), thatInput.split(), topicInput.split(), self._root)
-        return template
+        if template is None or patMatch is None:
+            return None
+        return MatchResult(patMatch, template)
 
     def star(self, starType, pattern, that, topic, index):
         """Returns a string, the portion of pattern that was matched by a *.

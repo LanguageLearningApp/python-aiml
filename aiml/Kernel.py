@@ -3,6 +3,8 @@
 
 from __future__ import print_function
 
+from collections import namedtuple
+
 import copy
 import glob
 import os
@@ -42,7 +44,7 @@ def msg_encoder(encoding=None):
                      lambda x: x.decode(encoding, 'replace'))
 
 
-
+Result = namedtuple('Result', 'patterns response')
 
 class Kernel:
     # module constants
@@ -75,6 +77,9 @@ class Kernel:
         self._subbers['person'] = WordSub(DefaultSubs.defaultPerson)
         self._subbers['person2'] = WordSub(DefaultSubs.defaultPerson2)
         self._subbers['normal'] = WordSub(DefaultSubs.defaultNormal)
+
+        # Stack required for us to understand the sequence of patterns
+        self.patMatchesStack = []
 
         # set up the element processors
         self._elementProcessors = {
@@ -358,6 +363,9 @@ class Kernel:
         self._respondLock.acquire()
 
         try:
+            # Clear the patMatches stack
+            self.patMatchesStack = []
+
             # Add the session, if it doesn't already exist
             self._addSession(sessionID)
 
@@ -391,7 +399,7 @@ class Kernel:
             assert(len(self.getPredicate(self._inputStack, sessionID)) == 0)
 
             # and return, encoding the string into the I/O encoding
-            return self._cod.enc(finalResponse)
+            return Result(self.patMatchesStack, self._cod.enc(finalResponse))
 
         finally:
             # release the lock
@@ -436,14 +444,16 @@ class Kernel:
 
         # Determine the final response.
         response = u""
-        elem = self._brain.match(subbedInput, subbedThat, subbedTopic)
-        if elem is None:
+        matchResult = self._brain.match(subbedInput, subbedThat, subbedTopic)
+        if matchResult is None:
             if self._verboseMode:
                 err = "WARNING: No match found for input: %s\n" % self._cod.enc(input_)
                 sys.stderr.write(err)
         else:
             # Process the element into a response string.
-            response += self._processElement(elem, sessionID).strip()
+            self.patMatchesStack.append(matchResult.pattern)
+            template = matchResult.template
+            response += self._processElement(template, sessionID).strip()
             response += u" "
         response = response.strip()
 
