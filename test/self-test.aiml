@@ -194,6 +194,16 @@ Nothing <random></random>here!
 <template>Multiple carets matched: <caret index="1"/>, <caret index="2"/>, <caret index="3"/></template>
 </category>
 
+<!-- mixed wildcards -->
+<category>
+<pattern>TEST CARET ^ AND STAR *</pattern>
+<template>Test caret and star: <caret/>, <star/></template>
+</category>
+<category>
+<pattern>TEST STAR * AND CARET ^</pattern>
+<template>Test star and caret: <star/>, <caret/></template>
+</category>
+
 
 <!-- system -->
 <category>

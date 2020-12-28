@@ -918,7 +918,7 @@ class Kernel:
         try: that = self._subbers['normal'].sub(outputHistory[-1])
         except: that = ""  # there might not be any output yet
         topic = self.getPredicate("topic", sessionID)
-        response = self._brain.star("star", input_, that, topic, index)
+        response = self._brain.wildcard("star", input_, that, topic, index)
         return response
 
     # <system>
@@ -1058,7 +1058,7 @@ class Kernel:
         try: that = self._subbers['normal'].sub(outputHistory[-1])
         except Exception: that = ""  # there might not be any output yet
         topic = self.getPredicate("topic", sessionID)
-        response = self._brain.star("thatstar", input_, that, topic, index)
+        response = self._brain.wildcard("thatstar", input_, that, topic, index)
         return response
 
     # <think>
@@ -1099,7 +1099,7 @@ class Kernel:
         try: that = self._subbers['normal'].sub(outputHistory[-1])
         except Exception: that = ""  # there might not be any output yet
         topic = self.getPredicate("topic", sessionID)
-        response = self._brain.star("topicstar", input_, that, topic, index)
+        response = self._brain.wildcard("topicstar", input_, that, topic, index)
         return response
 
     # <uppercase>
@@ -1151,5 +1151,5 @@ class Kernel:
         try: that = self._subbers['normal'].sub(outputHistory[-1])
         except: that = ""  # there might not be any output yet
         topic = self.getPredicate("topic", sessionID)
-        response = self._brain.caret("caret", input_, that, topic, index)
+        response = self._brain.wildcard("caret", input_, that, topic, index)
         return response
