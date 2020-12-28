@@ -152,6 +152,16 @@ class TestKernel( unittest.TestCase ):
         self._testTag('caret test #7', 'test caret end', ['End caret matched:'])
         self._testTag('caret test #8', 'test caret multiple makes me extremely happy',
                  ['Multiple carets matched: , , extremely happy'])
+    
+    def test20_mixed_wildcards( self ):
+        self._testTag('mixed wildcards test #1', 'test caret iPhone and star Android',
+                 ['Test caret and star: iPhone, Android'])
+        self._testTag('mixed wildcards test #2', 'test caret and star Android',
+                 ['Test caret and star: , Android'])
+        self._testTag('mixed wildcards test #3', 'test star iPhone and caret Android',
+                 ['Test star and caret: iPhone, Android'])
+        self._testTag('mixed wildcards test #4', 'test star iPhone and caret',
+                 ['Test star and caret: iPhone,'])
 
         # Run an interactive interpreter
         #print( "\nEntering interactive mode (ctrl-c to exit)" )

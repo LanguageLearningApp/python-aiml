@@ -159,11 +159,12 @@ class PatternMgr:
         patMatch, template = self._match(input_.split(), thatInput.split(), topicInput.split(), self._root)
         return template
 
-    def star(self, starType, pattern, that, topic, index):
+    def wildcard(self, wildcardType, pattern, that, topic, index):
         """Returns a string, the portion of pattern that was matched by a *.
 
-        The 'starType' parameter specifies which type of star to find.
+        The 'wildcardType' parameter specifies which type of wildcard to find.
         Legal values are:
+         - 'caret': matches a caret in the main pattern.
          - 'star': matches a star in the main pattern.
          - 'thatstar': matches a star in the that pattern.
          - 'topicstar': matches a star in the topic pattern.
@@ -188,41 +189,44 @@ class PatternMgr:
             return ""
 
         # Extract the appropriate portion of the pattern, based on the
-        # starType argument.
+        # wildcardType argument.
         words = None
-        if starType == 'star':
+        if wildcardType == 'caret':
             patMatch = patMatch[:patMatch.index(self._THAT)]
             words = input_.split()
-        elif starType == 'thatstar':
+        elif wildcardType == 'star':
+            patMatch = patMatch[:patMatch.index(self._THAT)]
+            words = input_.split()
+        elif wildcardType == 'thatstar':
             patMatch = patMatch[patMatch.index(self._THAT)+1 : patMatch.index(self._TOPIC)]
             words = thatInput.split()
-        elif starType == 'topicstar':
+        elif wildcardType == 'topicstar':
             patMatch = patMatch[patMatch.index(self._TOPIC)+1 :]
             words = topicInput.split()
         else:
             # unknown value
-            raise ValueError( "starType must be in ['star', 'thatstar', 'topicstar']" )
+            raise ValueError( "wildcardType must be in ['caret', 'star', 'thatstar', 'topicstar']" )
         
         # compare the input string to the matched pattern, word by word.
-        # At the end of this loop, if foundTheRightStar is true, start and
+        # At the end of this loop, if foundTheRightWildcard is true, start and
         # end will contain the start and end indices (in "words") of
-        # the substring that the desired star matched.
-        foundTheRightStar = False
-        start = end = j = numStars = k = 0
+        # the substring that the desired wildcard matched.
+        foundTheRightWildcard = False
+        start = end = j = numStars = numCarets = k = 0
         for i in range(len(words)):
-            # This condition is true after processing a star
+            # This condition is true after processing a wildcard
             # that ISN'T the one we're looking for.
             if i < k:
                 continue
             # If we're reached the end of the pattern, we're done.
             if j == len(patMatch):
                 break
-            if not foundTheRightStar:
+            if not foundTheRightWildcard:
                 if patMatch[j] in [self._STAR, self._UNDERSCORE]: #we got a star
                     numStars += 1
                     if numStars == index:
                         # This is the star we care about.
-                        foundTheRightStar = True
+                        foundTheRightWildcard = 'star' in wildcardType
                     start = i
                     # Iterate through the rest of the string.
                     for k in range (i, len(words)):
@@ -237,19 +241,42 @@ class PatternMgr:
                             end = k - 1
                             i = k
                             break
-                # If we just finished processing the star we cared
+                elif patMatch[j] in [self._CARET]: #we got a caret
+                    numCarets += 1
+                    if numCarets == index:
+                        # This is the caret we care about.
+                        foundTheRightWildcard = 'caret' in wildcardType
+                    start = i
+                    # Iterate through the rest of the string.
+                    for k in range (i, len(words)):
+                        # If the caret is at the end of the pattern,
+                        # we know exactly where it ends.
+                        if j+1  == len (patMatch):
+                            end = len (words)
+                            break
+                        # If the words have started matching the
+                        # pattern again, the caret has ended.
+                        if patMatch[j+1] == words[k]:
+                            _i = i
+                            end = k - 1
+                            i = k
+                            if _i == i:
+                                j += 1
+                            break
+                # If we just finished processing the wildcard we cared
                 # about, we exit the loop early.
-                if foundTheRightStar:
+                if foundTheRightWildcard:
                     break
             # Move to the next element of the pattern.
             j += 1
             
-        # extract the star words from the original, unmutilated input.
-        if foundTheRightStar:
+        # extract the wildcard words from the original, unmutilated input.
+        if foundTheRightWildcard:
             #print( ' '.join(pattern.split()[start:end+1]) )
-            if starType == 'star': return ' '.join(pattern.split()[start:end+1])
-            elif starType == 'thatstar': return ' '.join(that.split()[start:end+1])
-            elif starType == 'topicstar': return ' '.join(topic.split()[start:end+1])
+            if wildcardType == 'caret': return ' '.join(pattern.split()[start:end+1])
+            elif wildcardType == 'star': return ' '.join(pattern.split()[start:end+1])
+            elif wildcardType == 'thatstar': return ' '.join(that.split()[start:end+1])
+            elif wildcardType == 'topicstar': return ' '.join(topic.split()[start:end+1])
         else: return u""
 
     def caret(self, caretType, pattern, that, topic, index):
