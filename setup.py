@@ -44,7 +44,7 @@ PyAIML (c) Cort Stratton
                  "Topic :: Scientific/Engineering :: Artificial Intelligence"
                  ],
  
-    install_requires = [ 'setuptools',
+    install_requires = [ 'setuptools', 'collections',
     ],
 
     packages=[ "aiml", 'aiml.script' ],

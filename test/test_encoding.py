@@ -28,7 +28,7 @@ class TestEncoding( unittest.TestCase ):
         """
         
         print( b"Testing <" + (name or input_).encode(encoding) + b">")
-        response = self.k._cod.dec( self.k.respond( self.k._cod.enc(input_) ) )
+        response = self.k._cod.dec( self.k.respond( self.k._cod.enc(input_) ).response )
         self.assertIn( response, outputList, msg="input=%s"%input_ )
 
     def test01_utf8( self ):
