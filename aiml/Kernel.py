@@ -351,7 +351,7 @@ class Kernel:
     def respond(self, input_, sessionID=_globalSessionID):
         """Return the Kernel's response to the input string."""
         if len(input_) == 0:
-            return u""
+            return Result([], "")
 
         # Decode the input (assumed to be an encoded string) into a unicode
         # string. Note that if encoding is False, this will be a no-op
