@@ -155,7 +155,9 @@ class Kernel:
             if isinstance(commands, (str, unicode)):
                 commands = (commands,)
             for cmd in commands:
-                print(self._respond(cmd, self._globalSessionID))
+                r = self._respond(cmd, self._globalSessionID)
+                if self._verboseMode:
+                    print(r)
 
         finally:
             if chdir:
